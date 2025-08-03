@@ -88,7 +88,7 @@ Environment variable utilities with fallback support:
 - `LookupPresent` - Get non-empty env var with fallbacks
 - `Exists` - Check if env var exists
 
-### [`httputil`](./httputil/README.md)
+### [`networking`](./networking/README.md)
 HTTP utilities for web applications including context management, port checking, and request parsing.
 
 ### [`output`](./output/README.md)

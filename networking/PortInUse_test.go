@@ -1,4 +1,4 @@
-package httputil_test
+package networking_test
 
 import (
 	"net"
@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sampson-golang/utilities/httputil"
+	"github.com/sampson-golang/utilities/networking"
 )
 
 func TestPortInUse_AvailablePort(t *testing.T) {
@@ -25,7 +25,7 @@ func TestPortInUse_AvailablePort(t *testing.T) {
 	// Small delay to ensure the port is released
 	time.Sleep(10 * time.Millisecond)
 
-	inUse := httputil.PortInUse(port)
+	inUse := networking.PortInUse(port)
 	if inUse {
 		t.Errorf("Expected port %d to be available, but PortInUse returned true", port)
 	}
@@ -51,7 +51,7 @@ func TestPortInUse_PortInUse(t *testing.T) {
 		defer listener6.Close()
 	}
 
-	inUse := httputil.PortInUse(port)
+	inUse := networking.PortInUse(port)
 	if !inUse {
 		t.Errorf("Expected port %d to be in use, but PortInUse returned false", port)
 	}
@@ -68,7 +68,7 @@ func TestPortInUse_IPv4OnlyPort(t *testing.T) {
 	addr := listener.Addr().(*net.TCPAddr)
 	port := addr.Port
 
-	inUse := httputil.PortInUse(port)
+	inUse := networking.PortInUse(port)
 	if !inUse {
 		t.Errorf("Expected port %d (IPv4) to be detected as in use, but PortInUse returned false", port)
 	}
@@ -85,7 +85,7 @@ func TestPortInUse_IPv6OnlyPort(t *testing.T) {
 	addr := listener.Addr().(*net.TCPAddr)
 	port := addr.Port
 
-	inUse := httputil.PortInUse(port)
+	inUse := networking.PortInUse(port)
 	if !inUse {
 		t.Errorf("Expected port %d (IPv6) to be detected as in use, but PortInUse returned false", port)
 	}
@@ -93,7 +93,7 @@ func TestPortInUse_IPv6OnlyPort(t *testing.T) {
 
 func TestPortInUse_PortZero(t *testing.T) {
 	// Port 0 should always be available (it's used to request any available port)
-	inUse := httputil.PortInUse(0)
+	inUse := networking.PortInUse(0)
 	if inUse {
 		t.Error("Expected port 0 to be available, but PortInUse returned true")
 	}
@@ -105,7 +105,7 @@ func TestPortInUse_WellKnownPorts(t *testing.T) {
 	wellKnownPorts := []int{22, 80, 443, 3000, 8080, 9000}
 
 	for _, port := range wellKnownPorts {
-		_ = httputil.PortInUse(port) // Just ensure it doesn't panic
+		_ = networking.PortInUse(port) // Just ensure it doesn't panic
 	}
 }
 
@@ -114,7 +114,7 @@ func TestPortInUse_InvalidPorts(t *testing.T) {
 	invalidPorts := []int{-1, 65536, 100000}
 
 	for _, port := range invalidPorts {
-		inUse := httputil.PortInUse(port)
+		inUse := networking.PortInUse(port)
 		// Invalid ports should be considered "in use" (unavailable)
 		if !inUse {
 			t.Errorf("Expected invalid port %d to be considered in use, but PortInUse returned false", port)
@@ -151,7 +151,7 @@ func TestPortInUse_Concurrent(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < numChecks; j++ {
-				inUse := httputil.PortInUse(port)
+				inUse := networking.PortInUse(port)
 				if !inUse {
 					atomic.AddInt32(&failureCount, 1)
 				}
@@ -179,7 +179,7 @@ func TestPortInUse_QuickRelease(t *testing.T) {
 	port := addr.Port
 
 	// Port should be in use - but due to timing issues, we'll be more lenient
-	inUse := httputil.PortInUse(port)
+	inUse := networking.PortInUse(port)
 	if !inUse {
 		// On some systems, the port check might be racy, so we'll just log this
 		t.Logf("Note: Port %d was not detected as in use (this can happen due to timing)", port)
@@ -192,7 +192,7 @@ func TestPortInUse_QuickRelease(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Port should now be available
-	inUse = httputil.PortInUse(port)
+	inUse = networking.PortInUse(port)
 	if inUse {
 		t.Errorf("Expected port %d to be available after closing listener, but PortInUse returned true", port)
 	}
@@ -212,7 +212,7 @@ func BenchmarkPortInUse_AvailablePort(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = httputil.PortInUse(port)
+		_ = networking.PortInUse(port)
 	}
 }
 
@@ -229,7 +229,7 @@ func BenchmarkPortInUse_InUsePort(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = httputil.PortInUse(port)
+		_ = networking.PortInUse(port)
 	}
 }
 
@@ -250,7 +250,7 @@ func BenchmarkPortInUse_MultipleAvailablePorts(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		port := ports[i%len(ports)]
-		_ = httputil.PortInUse(port)
+		_ = networking.PortInUse(port)
 	}
 }
 
@@ -261,7 +261,7 @@ func BenchmarkPortInUse_HighPortNumbers(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		port := highPorts[i%len(highPorts)]
-		_ = httputil.PortInUse(port)
+		_ = networking.PortInUse(port)
 	}
 }
 
@@ -279,7 +279,7 @@ func BenchmarkPortInUse_Concurrent(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_ = httputil.PortInUse(port)
+			_ = networking.PortInUse(port)
 		}
 	})
 }

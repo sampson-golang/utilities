@@ -1,4 +1,4 @@
-package httputil_test
+package networking_test
 
 import (
 	"bytes"
@@ -7,14 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sampson-golang/utilities/httputil"
+	"github.com/sampson-golang/utilities/networking"
 )
 
 func TestQueryOrBody_GET_Request(t *testing.T) {
 	// Create a GET request with query parameters
 	req, _ := http.NewRequest("GET", "http://example.com?name=John&age=30&email=john@example.com", nil)
 
-	values, err := httputil.QueryOrBody(req, "name", "age", "email")
+	values, err := networking.QueryOrBody(req, "name", "age", "email")
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -37,7 +37,7 @@ func TestQueryOrBody_GET_PartialKeys(t *testing.T) {
 	// Create a GET request with only some of the requested keys
 	req, _ := http.NewRequest("GET", "http://example.com?name=John&city=NYC", nil)
 
-	values, err := httputil.QueryOrBody(req, "name", "age", "email")
+	values, err := networking.QueryOrBody(req, "name", "age", "email")
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -61,7 +61,7 @@ func TestQueryOrBody_POST_JSON(t *testing.T) {
 	req, _ := http.NewRequest("POST", "http://example.com", bytes.NewBufferString(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 
-	values, err := httputil.QueryOrBody(req, "name", "age", "email")
+	values, err := networking.QueryOrBody(req, "name", "age", "email")
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -85,7 +85,7 @@ func TestQueryOrBody_POST_JSON_InvalidJSON(t *testing.T) {
 	req, _ := http.NewRequest("POST", "http://example.com", bytes.NewBufferString(invalidJSON))
 	req.Header.Set("Content-Type", "application/json")
 
-	values, err := httputil.QueryOrBody(req, "name", "age", "email")
+	values, err := networking.QueryOrBody(req, "name", "age", "email")
 
 	if err == nil {
 		t.Error("Expected error for invalid JSON, got nil")
@@ -111,7 +111,7 @@ func TestQueryOrBody_POST_Form(t *testing.T) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.ParseForm() // Important: must parse form data
 
-	values, err := httputil.QueryOrBody(req, "name", "age", "email")
+	values, err := networking.QueryOrBody(req, "name", "age", "email")
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -135,7 +135,7 @@ func TestQueryOrBody_POST_JSON_ContentTypeWithCharset(t *testing.T) {
 	req, _ := http.NewRequest("POST", "http://example.com", bytes.NewBufferString(jsonBody))
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
-	values, err := httputil.QueryOrBody(req, "name", "age")
+	values, err := networking.QueryOrBody(req, "name", "age")
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -155,7 +155,7 @@ func TestQueryOrBody_QueryAndBody_Combined(t *testing.T) {
 	req, _ := http.NewRequest("POST", "http://example.com?name=John", bytes.NewBufferString(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 
-	values, err := httputil.QueryOrBody(req, "name", "age", "email")
+	values, err := networking.QueryOrBody(req, "name", "age", "email")
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -178,7 +178,7 @@ func TestQueryOrBody_QueryAndBody_Combined(t *testing.T) {
 func TestQueryOrBody_EmptyKeys(t *testing.T) {
 	req, _ := http.NewRequest("GET", "http://example.com?name=John&age=30", nil)
 
-	values, err := httputil.QueryOrBody(req)
+	values, err := networking.QueryOrBody(req)
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -193,7 +193,7 @@ func TestQueryOrBody_EmptyValues(t *testing.T) {
 	// Test with keys that have empty values
 	req, _ := http.NewRequest("GET", "http://example.com?name=&age=30", nil)
 
-	values, err := httputil.QueryOrBody(req, "name", "age")
+	values, err := networking.QueryOrBody(req, "name", "age")
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -216,7 +216,7 @@ func BenchmarkQueryOrBody_GET_Request(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = httputil.QueryOrBody(req, "name", "age", "email", "city", "country")
+		_, _ = networking.QueryOrBody(req, "name", "age", "email", "city", "country")
 	}
 }
 
@@ -227,7 +227,7 @@ func BenchmarkQueryOrBody_POST_JSON(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		req, _ := http.NewRequest("POST", "http://example.com", bytes.NewBufferString(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
-		_, _ = httputil.QueryOrBody(req, "name", "age", "email", "city", "country")
+		_, _ = networking.QueryOrBody(req, "name", "age", "email", "city", "country")
 	}
 }
 
@@ -244,7 +244,7 @@ func BenchmarkQueryOrBody_POST_Form(b *testing.B) {
 		req, _ := http.NewRequest("POST", "http://example.com", strings.NewReader(formData.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		req.ParseForm()
-		_, _ = httputil.QueryOrBody(req, "name", "age", "email", "city", "country")
+		_, _ = networking.QueryOrBody(req, "name", "age", "email", "city", "country")
 	}
 }
 
@@ -263,6 +263,6 @@ func BenchmarkQueryOrBody_Large_JSON(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		req, _ := http.NewRequest("POST", "http://example.com", bytes.NewBufferString(jsonBody))
 		req.Header.Set("Content-Type", "application/json")
-		_, _ = httputil.QueryOrBody(req, keys...)
+		_, _ = networking.QueryOrBody(req, keys...)
 	}
 }

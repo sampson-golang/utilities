@@ -1,4 +1,4 @@
-package httputil
+package networking
 
 import (
 	"encoding/json"

@@ -1,10 +1,10 @@
-package httputil_test
+package networking_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/sampson-golang/utilities/httputil"
+	"github.com/sampson-golang/utilities/networking"
 )
 
 type TestStruct struct {
@@ -17,7 +17,7 @@ func TestUnmarshalResponse_ValidJSON(t *testing.T) {
 	jsonData := `{"name":"John Doe","age":30,"email":"john@example.com"}`
 	var result TestStruct
 
-	err := httputil.UnmarshalResponse([]byte(jsonData), &result)
+	err := networking.UnmarshalResponse([]byte(jsonData), &result)
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -38,7 +38,7 @@ func TestUnmarshalResponse_InvalidJSON(t *testing.T) {
 	invalidJSON := `{"name":"John Doe","age":30,"email":` // Missing closing quote and bracket
 	var result TestStruct
 
-	err := httputil.UnmarshalResponse([]byte(invalidJSON), &result)
+	err := networking.UnmarshalResponse([]byte(invalidJSON), &result)
 
 	if err == nil {
 		t.Error("Expected error for invalid JSON, got nil")
@@ -52,7 +52,7 @@ func TestUnmarshalResponse_InvalidJSON(t *testing.T) {
 func TestUnmarshalResponse_EmptyJSON(t *testing.T) {
 	var result TestStruct
 
-	err := httputil.UnmarshalResponse([]byte("{}"), &result)
+	err := networking.UnmarshalResponse([]byte("{}"), &result)
 
 	if err != nil {
 		t.Errorf("Expected no error for empty JSON, got: %v", err)
@@ -67,7 +67,7 @@ func TestUnmarshalResponse_EmptyJSON(t *testing.T) {
 func TestUnmarshalResponse_NilBytes(t *testing.T) {
 	var result TestStruct
 
-	err := httputil.UnmarshalResponse(nil, &result)
+	err := networking.UnmarshalResponse(nil, &result)
 
 	// Nil bytes should actually cause an error since it's invalid JSON
 	if err == nil {
@@ -83,7 +83,7 @@ func TestUnmarshalResponse_Array(t *testing.T) {
 	jsonData := `[{"name":"John"},{"name":"Jane"}]`
 	var result []TestStruct
 
-	err := httputil.UnmarshalResponse([]byte(jsonData), &result)
+	err := networking.UnmarshalResponse([]byte(jsonData), &result)
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -102,7 +102,7 @@ func TestUnmarshalResponse_TypeMismatch(t *testing.T) {
 	jsonData := `{"name":"John Doe","age":"thirty","email":"john@example.com"}` // age as string instead of int
 	var result TestStruct
 
-	err := httputil.UnmarshalResponse([]byte(jsonData), &result)
+	err := networking.UnmarshalResponse([]byte(jsonData), &result)
 
 	if err == nil {
 		t.Error("Expected error for type mismatch, got nil")
@@ -113,7 +113,7 @@ func TestUnmarshalResponse_Map(t *testing.T) {
 	jsonData := `{"key1":"value1","key2":"value2"}`
 	var result map[string]string
 
-	err := httputil.UnmarshalResponse([]byte(jsonData), &result)
+	err := networking.UnmarshalResponse([]byte(jsonData), &result)
 
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -131,7 +131,7 @@ func BenchmarkUnmarshalResponse_SmallStruct(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = httputil.UnmarshalResponse(jsonData, &result)
+		_ = networking.UnmarshalResponse(jsonData, &result)
 	}
 }
 
@@ -146,7 +146,7 @@ func BenchmarkUnmarshalResponse_LargeArray(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = httputil.UnmarshalResponse(jsonData, &result)
+		_ = networking.UnmarshalResponse(jsonData, &result)
 	}
 }
 
@@ -156,7 +156,7 @@ func BenchmarkUnmarshalResponse_Map(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = httputil.UnmarshalResponse(jsonData, &result)
+		_ = networking.UnmarshalResponse(jsonData, &result)
 	}
 }
 
@@ -166,6 +166,6 @@ func BenchmarkUnmarshalResponse_ErrorCase(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = httputil.UnmarshalResponse(invalidJSON, &result)
+		_ = networking.UnmarshalResponse(invalidJSON, &result)
 	}
 }

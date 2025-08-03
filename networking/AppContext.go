@@ -1,4 +1,4 @@
-package httputil
+package networking
 
 import (
 	"context"
@@ -39,12 +39,4 @@ func NewContextToken(name string) *ContextToken {
 
 func NewAppContext(name string) *AppContext {
 	return &AppContext{token: NewContextToken(name)}
-}
-
-func ContextMiddleware(ctx *AppContext, value interface{}) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			next.ServeHTTP(w, ctx.WithContext(r, value))
-		})
-	}
 }

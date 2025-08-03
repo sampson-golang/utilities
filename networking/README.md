@@ -1,11 +1,11 @@
-# HTTPUtil Package
+# Networking Package
 
-The `httputil` package provides utilities for HTTP server development including context management, port checking, request parsing, and response handling.
+The `networking` package provides utilities for HTTP server development including context management, port checking, request parsing, and response handling.
 
 ## Installation
 
 ```bash
-go get github.com/sampson-golang/utilities/httputil
+go get github.com/sampson-golang/utilities/networking
 ```
 
 ## Functions and Types
@@ -20,7 +20,7 @@ package main
 import (
   "fmt"
   "net/http"
-  "github.com/sampson-golang/utilities/httputil"
+  "github.com/sampson-golang/utilities/networking"
 )
 
 type User struct {
@@ -30,10 +30,7 @@ type User struct {
 
 func main() {
   // Create a new app context for user data
-  userCtx := httputil.NewAppContext("user")
-
-  // Middleware to add user to context
-  userMiddleware := httputil.ContextMiddleware(userCtx, &User{ID: 123, Name: "John"})
+  userCtx := networking.NewAppContext("user")
 
   // Handler that uses context
   handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +43,7 @@ func main() {
   })
 
   // Chain middleware and handler
-  http.Handle("/", userMiddleware(handler))
+  http.Handle("/", handler)
 }
 ```
 
@@ -58,11 +55,11 @@ Check if a network port is currently in use on both IPv4 and IPv6.
 func examplePortCheck() {
   port := 8080
 
-  if httputil.PortInUse(port) {
+  if networking.PortInUse(port) {
     fmt.Printf("Port %d is already in use\n", port)
     // Try a different port
     for i := 8081; i <= 8090; i++ {
-      if !httputil.PortInUse(i) {
+      if !networking.PortInUse(i) {
         port = i
         fmt.Printf("Using port %d instead\n", port)
         break
@@ -84,7 +81,7 @@ Extract specified parameters from either URL query parameters or request body (J
 ```go
 func handleAPIRequest(w http.ResponseWriter, r *http.Request) {
   // Extract specific parameters from query or body
-  params, err := httputil.QueryOrBody(r, "username", "email", "token")
+  params, err := networking.QueryOrBody(r, "username", "email", "token")
   if err != nil {
     http.Error(w, "Invalid request: "+err.Error(), http.StatusBadRequest)
     return
@@ -124,7 +121,7 @@ type APIResponse struct {
 func handleAPIResponse(responseBody []byte) {
   var response APIResponse
 
-  err := httputil.UnmarshalResponse(responseBody, &response)
+  err := networking.UnmarshalResponse(responseBody, &response)
   if err != nil {
     fmt.Printf("Failed to parse API response: %v\n", err)
     return
@@ -187,17 +184,6 @@ Retrieves the value from the request context.
 **Returns:**
 - `interface{}` - The stored value, or `nil` if not found
 
-### `ContextMiddleware(ctx *AppContext, value interface{}) func(next http.Handler) http.Handler`
-
-Creates HTTP middleware that automatically adds a value to the context for all requests.
-
-**Parameters:**
-- `ctx` - The AppContext to use
-- `value` - The value to add to all requests
-
-**Returns:**
-- `func(next http.Handler) http.Handler` - Standard HTTP middleware function
-
 ### `PortInUse(port int) bool`
 
 Checks if a port is in use on both IPv4 and IPv6.
@@ -253,12 +239,12 @@ type AuthContext struct {
 }
 
 func AuthenticationMiddleware() func(http.Handler) http.Handler {
-  authCtx := httputil.NewAppContext("auth")
+  authCtx := networking.NewAppContext("auth")
 
   return func(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
       // Extract token from query or body
-      params, err := httputil.QueryOrBody(r, "token", "api_key")
+      params, err := networking.QueryOrBody(r, "token", "api_key")
       if err != nil {
         http.Error(w, "Invalid request", http.StatusBadRequest)
         return
@@ -289,7 +275,7 @@ func AuthenticationMiddleware() func(http.Handler) http.Handler {
 }
 
 func protectedHandler(w http.ResponseWriter, r *http.Request) {
-  authCtx := httputil.NewAppContext("auth")
+  authCtx := networking.NewAppContext("auth")
   user := authCtx.GetContext(r).(*AuthContext)
 
   fmt.Fprintf(w, "Welcome, %s! (User ID: %d)", user.Username, user.UserID)
@@ -304,7 +290,7 @@ func StartServer(preferredPort int) error {
 
   // Find an available port starting from preferred
   for port <= preferredPort+10 {
-    if !httputil.PortInUse(port) {
+    if !networking.PortInUse(port) {
         break
     }
     port++
@@ -355,13 +341,13 @@ func (c *APIClient) makeRequest(endpoint string, result interface{}) error {
 
   if resp.StatusCode >= 400 {
     var apiErr APIError
-    if err := httputil.UnmarshalResponse(body, &apiErr); err != nil {
+    if err := networking.UnmarshalResponse(body, &apiErr); err != nil {
       return fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
     }
     return fmt.Errorf("API Error %d: %s", apiErr.Code, apiErr.Message)
   }
 
-  return httputil.UnmarshalResponse(body, result)
+  return networking.UnmarshalResponse(body, result)
 }
 ```
 
@@ -370,7 +356,7 @@ func (c *APIClient) makeRequest(endpoint string, result interface{}) error {
 ```go
 func createUserHandler(w http.ResponseWriter, r *http.Request) {
   // Extract user data from query or body
-  params, err := httputil.QueryOrBody(r, "name", "email", "role", "department")
+  params, err := networking.QueryOrBody(r, "name", "email", "role", "department")
   if err != nil {
     http.Error(w, "Invalid request format: "+err.Error(), http.StatusBadRequest)
     return
@@ -423,7 +409,7 @@ type RequestContext struct {
 }
 
 func RequestLoggingMiddleware() func(http.Handler) http.Handler {
-  reqCtx := httputil.NewAppContext("request")
+  reqCtx := networking.NewAppContext("request")
 
   return func(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -434,7 +420,7 @@ func RequestLoggingMiddleware() func(http.Handler) http.Handler {
       }
 
       // Try to get user ID from auth context
-      authCtx := httputil.NewAppContext("auth")
+      authCtx := networking.NewAppContext("auth")
       if auth := authCtx.GetContext(r); auth != nil {
         ctx.UserID = auth.(*AuthContext).Username
       }
@@ -458,7 +444,7 @@ func RequestLoggingMiddleware() func(http.Handler) http.Handler {
 Run the tests with:
 
 ```bash
-go test github.com/sampson-golang/utilities/httputil
+go test github.com/sampson-golang/utilities/networking
 ```
 
 See the test files for comprehensive examples:

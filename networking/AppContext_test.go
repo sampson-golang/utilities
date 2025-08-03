@@ -1,16 +1,15 @@
-package httputil_test
+package networking_test
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/sampson-golang/utilities/httputil"
+	"github.com/sampson-golang/utilities/networking"
 )
 
 func TestNewContextToken(t *testing.T) {
 	name := "test-token"
-	token := httputil.NewContextToken(name)
+	token := networking.NewContextToken(name)
 
 	if token == nil {
 		t.Error("Expected non-nil token")
@@ -23,7 +22,7 @@ func TestNewContextToken(t *testing.T) {
 
 func TestNewAppContext(t *testing.T) {
 	name := "test-context"
-	appCtx := httputil.NewAppContext(name)
+	appCtx := networking.NewAppContext(name)
 
 	if appCtx == nil {
 		t.Error("Expected non-nil AppContext")
@@ -42,7 +41,7 @@ func TestNewAppContext(t *testing.T) {
 }
 
 func TestAppContext_SetContext(t *testing.T) {
-	appCtx := httputil.NewAppContext("test")
+	appCtx := networking.NewAppContext("test")
 	req, _ := http.NewRequest("GET", "/", nil)
 
 	testValue := "test-value"
@@ -59,7 +58,7 @@ func TestAppContext_SetContext(t *testing.T) {
 }
 
 func TestAppContext_GetContext(t *testing.T) {
-	appCtx := httputil.NewAppContext("test")
+	appCtx := networking.NewAppContext("test")
 	req, _ := http.NewRequest("GET", "/", nil)
 
 	// Test getting from request without context value
@@ -79,7 +78,7 @@ func TestAppContext_GetContext(t *testing.T) {
 }
 
 func TestAppContext_WithContext(t *testing.T) {
-	appCtx := httputil.NewAppContext("test")
+	appCtx := networking.NewAppContext("test")
 	req, _ := http.NewRequest("GET", "/", nil)
 
 	testValue := "test-value"
@@ -96,7 +95,7 @@ func TestAppContext_WithContext(t *testing.T) {
 }
 
 func TestAppContext_WithContext_ExistingValue(t *testing.T) {
-	appCtx := httputil.NewAppContext("test")
+	appCtx := networking.NewAppContext("test")
 	req, _ := http.NewRequest("GET", "/", nil)
 
 	// Set initial value
@@ -120,7 +119,7 @@ func TestAppContext_WithContext_ExistingValue(t *testing.T) {
 }
 
 func TestAppContext_DifferentTypes(t *testing.T) {
-	appCtx := httputil.NewAppContext("test")
+	appCtx := networking.NewAppContext("test")
 	req, _ := http.NewRequest("GET", "/", nil)
 
 	// Test string
@@ -162,8 +161,8 @@ func TestAppContext_DifferentTypes(t *testing.T) {
 
 func TestAppContext_MultipleContexts(t *testing.T) {
 	// Test that different AppContext instances don't interfere with each other
-	ctx1 := httputil.NewAppContext("context1")
-	ctx2 := httputil.NewAppContext("context2")
+	ctx1 := networking.NewAppContext("context1")
+	ctx2 := networking.NewAppContext("context2")
 
 	req, _ := http.NewRequest("GET", "/", nil)
 
@@ -184,80 +183,11 @@ func TestAppContext_MultipleContexts(t *testing.T) {
 	}
 }
 
-func TestContextMiddleware(t *testing.T) {
-	appCtx := httputil.NewAppContext("test-middleware")
-	testValue := "middleware-value"
-
-	// Create a simple handler that checks the context
-	var receivedValue interface{}
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedValue = appCtx.GetContext(r)
-		w.WriteHeader(http.StatusOK)
-	})
-
-	// Wrap with middleware
-	middleware := httputil.ContextMiddleware(appCtx, testValue)
-	wrappedHandler := middleware(handler)
-
-	// Create test request and response
-	req, _ := http.NewRequest("GET", "/", nil)
-	w := httptest.NewRecorder()
-
-	// Execute the wrapped handler
-	wrappedHandler.ServeHTTP(w, req)
-
-	// Check that the value was set correctly
-	if receivedValue != testValue {
-		t.Errorf("Expected middleware value %v, got %v", testValue, receivedValue)
-	}
-
-	if w.Code != http.StatusOK {
-		t.Errorf("Expected status 200, got %d", w.Code)
-	}
-}
-
-func TestContextMiddleware_ChainedMiddleware(t *testing.T) {
-	ctx1 := httputil.NewAppContext("middleware1")
-	ctx2 := httputil.NewAppContext("middleware2")
-
-	value1 := "value1"
-	value2 := "value2"
-
-	var receivedValue1, receivedValue2 interface{}
-
-	// Final handler
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedValue1 = ctx1.GetContext(r)
-		receivedValue2 = ctx2.GetContext(r)
-		w.WriteHeader(http.StatusOK)
-	})
-
-	// Chain middlewares
-	middleware1 := httputil.ContextMiddleware(ctx1, value1)
-	middleware2 := httputil.ContextMiddleware(ctx2, value2)
-
-	wrappedHandler := middleware1(middleware2(handler))
-
-	// Execute
-	req, _ := http.NewRequest("GET", "/", nil)
-	w := httptest.NewRecorder()
-	wrappedHandler.ServeHTTP(w, req)
-
-	// Both values should be present
-	if receivedValue1 != value1 {
-		t.Errorf("Expected value1 %v, got %v", value1, receivedValue1)
-	}
-
-	if receivedValue2 != value2 {
-		t.Errorf("Expected value2 %v, got %v", value2, receivedValue2)
-	}
-}
-
 func TestContextToken_String(t *testing.T) {
 	names := []string{"test", "user-id", "session", "auth-token", ""}
 
 	for _, name := range names {
-		token := httputil.NewContextToken(name)
+		token := networking.NewContextToken(name)
 		if token.String() != name {
 			t.Errorf("Expected token name %s, got %s", name, token.String())
 		}
@@ -266,7 +196,7 @@ func TestContextToken_String(t *testing.T) {
 
 // Benchmarks
 func BenchmarkAppContext_SetContext(b *testing.B) {
-	appCtx := httputil.NewAppContext("benchmark")
+	appCtx := networking.NewAppContext("benchmark")
 	req, _ := http.NewRequest("GET", "/", nil)
 	testValue := "benchmark-value"
 
@@ -277,7 +207,7 @@ func BenchmarkAppContext_SetContext(b *testing.B) {
 }
 
 func BenchmarkAppContext_GetContext(b *testing.B) {
-	appCtx := httputil.NewAppContext("benchmark")
+	appCtx := networking.NewAppContext("benchmark")
 	req, _ := http.NewRequest("GET", "/", nil)
 	testValue := "benchmark-value"
 	req = appCtx.SetContext(req, testValue)
@@ -289,7 +219,7 @@ func BenchmarkAppContext_GetContext(b *testing.B) {
 }
 
 func BenchmarkAppContext_WithContext(b *testing.B) {
-	appCtx := httputil.NewAppContext("benchmark")
+	appCtx := networking.NewAppContext("benchmark")
 	req, _ := http.NewRequest("GET", "/", nil)
 	testValue := "benchmark-value"
 
@@ -300,7 +230,7 @@ func BenchmarkAppContext_WithContext(b *testing.B) {
 }
 
 func BenchmarkAppContext_WithContext_ExistingValue(b *testing.B) {
-	appCtx := httputil.NewAppContext("benchmark")
+	appCtx := networking.NewAppContext("benchmark")
 	req, _ := http.NewRequest("GET", "/", nil)
 	req = appCtx.SetContext(req, "initial-value")
 	newValue := "new-value"
@@ -311,30 +241,10 @@ func BenchmarkAppContext_WithContext_ExistingValue(b *testing.B) {
 	}
 }
 
-func BenchmarkContextMiddleware(b *testing.B) {
-	appCtx := httputil.NewAppContext("benchmark")
-	testValue := "benchmark-value"
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = appCtx.GetContext(r)
-		w.WriteHeader(http.StatusOK)
-	})
-
-	middleware := httputil.ContextMiddleware(appCtx, testValue)
-	wrappedHandler := middleware(handler)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		req, _ := http.NewRequest("GET", "/", nil)
-		w := httptest.NewRecorder()
-		wrappedHandler.ServeHTTP(w, req)
-	}
-}
-
 func BenchmarkMultipleContexts(b *testing.B) {
-	contexts := make([]*httputil.AppContext, 10)
+	contexts := make([]*networking.AppContext, 10)
 	for i := 0; i < 10; i++ {
-		contexts[i] = httputil.NewAppContext("context" + string(rune(i+48)))
+		contexts[i] = networking.NewAppContext("context" + string(rune(i+48)))
 	}
 
 	b.ResetTimer()
@@ -356,13 +266,13 @@ func BenchmarkMultipleContexts(b *testing.B) {
 func BenchmarkNewAppContext(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = httputil.NewAppContext("benchmark-context")
+		_ = networking.NewAppContext("benchmark-context")
 	}
 }
 
 func BenchmarkNewContextToken(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = httputil.NewContextToken("benchmark-token")
+		_ = networking.NewContextToken("benchmark-token")
 	}
 }
