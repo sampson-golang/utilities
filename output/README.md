@@ -124,11 +124,27 @@ Converts any Go value to a pretty-formatted JSON string.
 - `string` - Pretty-formatted JSON string using provided or 2-space indentation
 
 **Behavior:**
+- Internally calls `PrettifyBytes` and converts the result to `string`
+
+### `PrettifyBytes(i interface{}, indent ...string) []bytes`
+
+Converts any Go value to a pretty-formatted JSON byte array
+Used by `Prettify`
+
+**Parameters:**
+- `i` - Any Go value to convert to JSON
+- `indent` - Optional indent string, defaults to 2 spaces
+- ...rest - ignored
+
+**Returns:**
+- `[]bytes` - Pretty-formatted JSON bytes using provided or 2-space indentation
+
+**Behavior:**
 - Uses `json.MarshalIndent` with `""` prefix
   - if `indent` is passed, it is used
   - if `indent` is not passed, 2-spaces are used
 - Handles all JSON-serializable Go types
-- Returns empty string if JSON marshaling fails (error is ignored)
+- Returns empty byte array if JSON marshaling fails (error is ignored)
 - Does not panic on invalid input
 
 ### `PrettyPrint(i interface{}, indent ...string)`
