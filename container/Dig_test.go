@@ -42,6 +42,27 @@ var digTestCases = []digTestCase{
 		nil,
 		true,
 	},
+	{
+		"existing key with nil value",
+		map[string]interface{}{"key": nil},
+		[]any{"key"},
+		nil,
+		true,
+	},
+	{
+		"existing key with empty string value",
+		map[string]interface{}{"key": ""},
+		[]any{"key"},
+		"",
+		false,
+	},
+	{
+		"existing key with empty zero value",
+		map[string]interface{}{"key": 0},
+		[]any{"key"},
+		0,
+		false,
+	},
 
 	// Array/slice navigation
 	{

@@ -17,6 +17,16 @@ func DigAssign(result interface{}, key string, data interface{}, path ...any) {
 
 		for val.Kind() == reflect.Interface || (val.Kind() == reflect.Ptr && !val.IsNil()) {
 			val = val.Elem()
+			switch val.Kind() {
+			case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer, reflect.Interface, reflect.Slice:
+				if !val.IsValid() || val.IsNil() {
+					return
+				}
+			default:
+				if !val.IsValid() {
+					return
+				}
+			}
 		}
 
 		field := reflect.ValueOf(result).Elem().FieldByName(key)

@@ -42,5 +42,8 @@ func Dig(data interface{}, path ...any) interface{} {
 			return nil
 		}
 	}
+	if current == nil {
+		return nil
+	}
 	return &current
 }
